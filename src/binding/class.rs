@@ -122,3 +122,12 @@ pub fn is_frozen(object: Value) -> Value {
 pub fn freeze(object: Value) -> Value {
     unsafe { class::rb_obj_freeze(object) }
 }
+
+#[cfg(ruby_version_gt_2_4)]
+pub fn is_eql(object1: Value, object2: Value) -> Value {
+    unsafe { class::rb_eql(object1, object2) }
+}
+
+pub fn equals(object1: Value, object2: Value) -> Value {
+    unsafe { class::rb_equal(object1, object2) }
+}
