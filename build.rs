@@ -40,6 +40,24 @@ fn macos_static_ruby_dep() {
 #[cfg(not(target_os = "windows"))]
 fn windows_static_ruby_dep() {}
 
+fn rustc_cfg_ruby_version() {
+    let program_version = rbconfig("RUBY_PROGRAM_VERSION");
+    let v: Vec<u32> = program_version.split('.').map(|s| s.parse::<u32>().unwrap()).collect();
+    match v[..] {
+        [major, minor, teeny] => {
+            println!("cargo:rustc-cfg=ruby_version=\"{}.{}.{}\"", major, minor, teeny);
+            println!("cargo:rustc-cfg=ruby_api_version=\"{}.{}\"", major, minor);
+            for major_version in 1..major {
+                println!("cargo:rustc-cfg=ruby_version_gt_{}", major_version);
+                for minor_version in 0..minor {
+                    println!("cargo:rustc-cfg=ruby_version_gt_{}_{}", major, minor_version);
+                }
+            }
+        }
+        _ => unreachable!()
+    }
+}
+
 // Windows needs ligmp-10.dll as gmp.lib
 #[cfg(target_os = "windows")]
 fn windows_static_ruby_dep() {
@@ -349,6 +367,8 @@ fn should_link() -> bool {
 }
 
 fn main() {
+    rustc_cfg_ruby_version();
+
     // Ruby programs calling Rust doesn't need cc linking
     if should_link() {
 
